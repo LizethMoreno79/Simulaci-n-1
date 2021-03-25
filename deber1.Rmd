@@ -1,0 +1,123 @@
+---
+title: "Generador de Números pseudoaleatorios"
+
+author: " Lizeth Moreno"
+date: "14 de abril de 2019"
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+  
+
+---
+<div class=text-justify>
+Facultad de Ciencias, Ingeniería Matemática, Escuela Politécnica Nacional.
+
+** SIMULACIÓN **
+
+###DEBER1
+
+
+##Ejercicio 3.3 (para entregar)
+Considera el generador congruencial definido por:
+
+$x_{n+1}=(65x_{n}+1)mod 2048$
+
+$U_{n+1}=\frac{X_{n+1}}{{2048}}, n=0,1,...$
+
+####a.Indicar razonadamente si es de ciclo mÃ¡ximo.
+
+El generador congruencial esta dado para :
+$a=65$
+$m=2048$
+$c=1$
+Este generador congruencial tendrÃ¡ su periodo mÃ¡ximo en $p=2048$ si y solo si se cumplen tres condiciones segÃºn el Teorema
+1. gcd(m,c) = 1
+
+```{r}
+library("numbers")
+m<-2048
+c<-1
+GCD(m,c)
+```
+
+2. $a-1=64$ mÃºltiplo de los factores primos de 20481.
+
+Apartir de $primeFactors$ se calcula los factores primos de 2048 
+```{r}
+library("numbers")
+m<-2048
+m
+#primeFactors(n)
+```
+De tal forma quÃ© se verifica que $64$ es múltiplo de $2$
+
+3.$2048$ múltiplo de 4 y $64$ también lo es.
+
+```{r}
+2048/4
+```
+
+Así, $p=2048$ se concluye que el ciclo máximo.
+
+
+####b.Generar $1000$ valores tomando como semilla inicial el nÂº de grupo multiplicado por $100$ y obtener el tiempo de CPU. Representar grÃ¡ficamente el ajuste a la densidad teÃ³rica y realizar el correspondiente contraste de Kolmogorov-Smirnov.
+
+Usando código de Rstudio para calcular el tiempo de CPU  se tiene:
+```{r}
+n_g<-2
+a<-65
+c<-1
+m<-2048
+initRANDC <- function(semilla=as.numeric(Sys.time()), a=65, c=1, m=2048) {
+  .semilla <<- as.double(semilla) %% m  #C?lculos en doble precisi?n
+  .a <<- a
+  .c <<- c
+  .m <<- m
+  return(invisible(list(semilla=.semilla,a=.a,c=.c,m=.m))) #print(initRANDC())
+}
+initRANDC()
+RANDC <- function() {
+  if (!exists(".semilla", envir=globalenv())) initRANDC()
+  .semilla <<- (.a * .semilla + .c) %% .m
+  return(.semilla/.m)
+}
+RANDCN <- function(n=1000) {
+  x <- numeric(n)
+  for(i in 1:n) x[i]<-RANDC()
+  return(replicate(n,RANDC()))
+}
+system.time(RANDCN(n=1000))
+```
+Su represetnación gráfica del ajuste  la densidad teórica es:
+```{r}
+hist(RANDCN(n=1000), freq = FALSE)
+#abline(h = 1,col=4,byrow = TRUE)
+```
+Contraste de Kolmogorov-Smirnov
+```{r}
+u<-RANDCN(n=1000)
+curve(ecdf(u)(x), type = "s", lwd = 2)
+curve(punif(x, 0, 1), add = TRUE)
+ks.test(u, "punif", 0, 1)
+```
+
+
+####c.Representar los pares de datos $(u_{i},u_{i+1})$ Â¿se observa algÃºn problema?.
+```{r}
+u<-RANDCN(n=1000)
+acf(u)
+```
+
+Se puede identificar la independencia.
+
+####d.Estudiar la aleatoriedad de este generador empleando repetidamente el test de Ljung-Box, considerando 500 pruebas con muestras de tamaÃ±o 50 y hasta el salto 10 $(Box.test(u,lag=10, type=Ljung))$. Comparar el ajuste de las distribuciones del estaásstico y  
+$p-valor$ a las de referencia.
+
+```{r}
+pruebas<-500
+tamano<-50
+Box.test(x = u,lag = 10,type = "Ljung")
+```
+
+
